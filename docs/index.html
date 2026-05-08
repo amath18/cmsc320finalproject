@@ -1,0 +1,750 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Predicting Diabetes from Survey Data Alone — CMSC320 Spring 2026</title>
+  <meta name="description" content="A data-science tutorial that uses the 2015 BRFSS health survey to ask whether 21 lifestyle and demographic questions are enough to flag people at risk for diabetes.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="topbar__inner">
+    <a class="topbar__brand" href="#top">
+      <span class="topbar__mark"></span>
+      <span class="topbar__title">Survey &amp; Sugar</span>
+    </a>
+    <nav class="topbar__nav" aria-label="Section navigation">
+      <a href="#introduction">Introduction</a>
+      <a href="#data">Data</a>
+      <a href="#exploration">Exploration</a>
+      <a href="#models">Models</a>
+      <a href="#calculator">Calculator</a>
+      <a href="#conclusions">Conclusions</a>
+    </nav>
+    <div class="topbar__meta">
+      <a href="https://github.com/amath18/cmsc320finalproject" target="_blank" rel="noopener">Repository ↗</a>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+<section class="hero" id="top">
+  <div class="hero__rule"></div>
+  <p class="eyebrow">CMSC 320 — Spring 2026 — Final Tutorial</p>
+  <h1 class="display">
+    Predicting diabetes
+    <span class="display__alt">from <em>survey data</em> alone.</span>
+  </h1>
+  <p class="dek">
+    The CDC asks 400,000 Americans the same 22 questions every year. We trained
+    three machine-learning models on the answers, asked whether a 30-second
+    questionnaire could replace a blood test, and built a calculator so you can
+    try it on yourself.
+  </p>
+  <div class="byline">
+    <div class="byline__authors">
+      <span class="byline__label">By</span>
+      Pranav Bykampadi <span class="byline__sep">·</span>
+      Ansh Mathur <span class="byline__sep">·</span>
+      Alvin <span class="byline__sep">·</span>
+      Addhyan Kumar
+    </div>
+    <div class="byline__date">May 8, 2026 &nbsp;·&nbsp; ~14 min read</div>
+  </div>
+  <div class="hero__stats">
+    <figure class="stat">
+      <div class="stat__num" data-counter="253680">253,680</div>
+      <figcaption>survey respondents</figcaption>
+    </figure>
+    <figure class="stat">
+      <div class="stat__num">21</div>
+      <figcaption>survey features</figcaption>
+    </figure>
+    <figure class="stat">
+      <div class="stat__num">0.827</div>
+      <figcaption>ROC-AUC (best model)</figcaption>
+    </figure>
+    <figure class="stat">
+      <div class="stat__num">79.5%</div>
+      <figcaption>diabetes cases caught</figcaption>
+    </figure>
+  </div>
+  <a class="hero__scroll" href="#contributions" aria-label="Scroll down">
+    <span></span>
+  </a>
+</section>
+
+<section class="contrib" id="contributions">
+  <h2 class="section-heading"><span class="section-heading__num">A.</span> Contributions</h2>
+  <p class="lede">
+    For each member, we list the rubric sections they led:
+    <span class="key">A</span> project idea,
+    <span class="key">B</span> dataset curation,
+    <span class="key">C</span> exploration &amp; statistics,
+    <span class="key">D</span> ML algorithm design,
+    <span class="key">E</span> ML training &amp; evaluation,
+    <span class="key">F</span> visualization &amp; results,
+    <span class="key">G</span> tutorial writing.
+  </p>
+  <div class="contrib-grid">
+    <article class="contrib-card">
+      <h3>Pranav Bykampadi</h3>
+      <p class="contrib-card__sections">— TBD —</p>
+      <p class="contrib-card__note">Section letters and short description to be filled in before the team's Gradescope submission.</p>
+    </article>
+    <article class="contrib-card">
+      <h3>Ansh Mathur</h3>
+      <p class="contrib-card__sections">— TBD —</p>
+      <p class="contrib-card__note">Section letters and short description to be filled in before the team's Gradescope submission.</p>
+    </article>
+    <article class="contrib-card">
+      <h3>Alvin</h3>
+      <p class="contrib-card__sections">— TBD —</p>
+      <p class="contrib-card__note">Section letters and short description to be filled in before the team's Gradescope submission.</p>
+    </article>
+    <article class="contrib-card">
+      <h3>Addhyan Kumar</h3>
+      <p class="contrib-card__sections">— TBD —</p>
+      <p class="contrib-card__note">Section letters and short description to be filled in before the team's Gradescope submission.</p>
+    </article>
+  </div>
+</section>
+
+<article class="prose">
+
+  <section id="introduction">
+    <h2 class="section-heading"><span class="section-heading__num">1.</span> Introduction</h2>
+    <p class="lede">
+      Roughly <strong>one in ten Americans</strong> has diabetes, and another one in three is
+      pre-diabetic. Most don't know it. The classical screen — a fasting blood-glucose or
+      <abbr title="Glycated hemoglobin, a marker of long-term blood sugar">HbA1c</abbr> draw —
+      is cheap by hospital standards but still requires a clinic, a phlebotomist, and a follow-up
+      appointment that an uninsured patient may never make.
+    </p>
+    <p>
+      The federal Behavioral Risk Factor Surveillance System (BRFSS) takes the opposite approach.
+      Every year the CDC calls 400,000+ adults and asks the same 22 questions: how tall are you, do
+      you smoke, did you eat fruit yesterday, can you walk a flight of stairs without help. The data
+      are free, the questions take ninety seconds, and they cost nothing to administer. The natural
+      question is whether the answers carry enough signal to flag someone at elevated risk before
+      they ever set foot in a clinic.
+    </p>
+    <blockquote class="pullquote">
+      Can we predict diabetes risk from cheap survey data alone, well enough to triage who should
+      go get a real blood test?
+    </blockquote>
+    <p>
+      That is the question this tutorial tries to answer. Along the way it walks through the full
+      data-science pipeline expected by CMSC 320: acquiring and curating the survey, exploring it
+      with summary statistics and three formal hypothesis tests, training and comparing three
+      classification algorithms, and converting the best one into an in-browser tool you can run on
+      your own answers at the bottom of the page.
+    </p>
+  </section>
+
+  <section id="data">
+    <h2 class="section-heading"><span class="section-heading__num">2.</span> Data curation</h2>
+    <p>
+      The dataset is <em>diabetes_binary_health_indicators_BRFSS2015.csv</em>, a cleaned subset of
+      the 2015 BRFSS survey released by Alex Teboul on
+      <a href="https://www.kaggle.com/datasets/alexteboul/diabetes-health-indicators-dataset" target="_blank" rel="noopener">Kaggle</a>
+      (original source: <a href="https://www.cdc.gov/brfss/annual_data/annual_2015.html" target="_blank" rel="noopener">CDC BRFSS 2015 codebook</a>).
+      Each row is one respondent. The target column,
+      <code>Diabetes_binary</code>, equals 1 if the respondent has been told by a health
+      professional that they have diabetes (or, in some recodes, pre-diabetes) and 0 otherwise.
+      The remaining 21 columns are mostly binary indicators (high blood pressure, smoker, physical
+      activity), a handful of ordinal scales (general health, age band, income, education), and one
+      continuous feature, BMI.
+    </p>
+    <p>
+      Preprocessing was deliberately light, because the file is already harmonized:
+    </p>
+    <ol class="steps">
+      <li>Strip stray whitespace from column names.</li>
+      <li>Force every column through <code>pd.to_numeric(errors="coerce")</code>; drop the (zero) rows that fail.</li>
+      <li>Cast every column to <code>int</code> — every variable is coded numerically by design.</li>
+      <li>Engineer one helper column, <code>AgeGroup</code>, that buckets the 13-level <code>Age</code> ordinal into Young / Middle / Older for the ANOVA below.</li>
+    </ol>
+    <p>
+      After cleaning, the working frame is <strong>253,680 rows × 22 columns</strong>: zero missing
+      values, fully numeric, ready for analysis.
+    </p>
+
+    <details class="codeblock">
+      <summary>Show the preprocessing code</summary>
+<pre><code class="lang-python">import pandas as pd
+
+df = pd.read_csv("diabetes_binary_health_indicators_BRFSS2015.csv")
+df.columns = df.columns.str.strip()
+
+for col in df.columns:
+    df[col] = pd.to_numeric(df[col], errors="coerce")
+
+df = df.dropna()
+for col in df.columns:
+    df[col] = df[col].astype(int)
+
+def age_bucket(code):
+    if code &lt;= 4:  return "Young (18-39)"
+    if code &lt;= 9:  return "Middle (40-64)"
+    return "Older (65+)"
+
+df["AgeGroup"] = df["Age"].apply(age_bucket)
+df.shape  # (253680, 22) before AgeGroup, (253680, 23) after</code></pre>
+    </details>
+  </section>
+
+  <section id="exploration">
+    <h2 class="section-heading"><span class="section-heading__num">3.</span> Exploratory analysis</h2>
+    <p>
+      Before fitting any model we want a feel for the data: how lopsided is the target, which features
+      seem to move with diabetes, and are the differences we see big enough to be real or could they
+      be noise? Three formal hypothesis tests answer the third question.
+    </p>
+
+    <h3>3.1 The target is heavily imbalanced</h3>
+    <figure class="figure">
+      <img src="figures/01_class_balance.png" alt="Bar chart showing 218,334 respondents without diabetes and 35,346 with diabetes">
+      <figcaption>
+        <strong>Figure 1.</strong> Of 253,680 respondents, only <strong>13.9%</strong> reported a
+        diabetes diagnosis. Any model that always predicts &ldquo;no diabetes&rdquo; will be 86%
+        accurate and useless — accuracy is not the right metric here.
+      </figcaption>
+    </figure>
+
+    <h3>3.2 Which features even matter?</h3>
+    <p>
+      A quick Pearson correlation against the target gives a first-pass ranking. None of the
+      individual correlations are large in absolute terms — that's expected for a 21-feature health
+      survey, where most signal lives in interactions — but the directions are sensible: high blood
+      pressure, high cholesterol, BMI, age, and self-rated general health are the most strongly
+      associated with diabetes; physical activity, education, and income point the other way.
+    </p>
+    <figure class="figure">
+      <img src="figures/02_correlations.png" alt="Horizontal bar chart of each feature's Pearson correlation with the target">
+      <figcaption>
+        <strong>Figure 2.</strong> Every feature's correlation with <code>Diabetes_binary</code>.
+        Red bars run with diabetes; blue bars run against it. Self-rated <em>general health</em>
+        is the single strongest signal — a 90-cent question that appears to do real work.
+      </figcaption>
+    </figure>
+
+    <h3>3.3 Hypothesis test 1 — does BMI separate the groups?</h3>
+    <p>
+      We test whether the <em>mean</em> BMI among diabetics is higher than among non-diabetics. The
+      classical tool here is Welch's <em>t</em>-test, which doesn't require equal variances, run as a
+      one-sided test because the directional prediction (higher BMI for diabetics) is the medically
+      meaningful one.
+    </p>
+    <ul class="hypotheses">
+      <li><strong>H<sub>0</sub>:</strong> mean BMI(DM) ≤ mean BMI(no DM)</li>
+      <li><strong>H<sub>A</sub>:</strong> mean BMI(DM) &gt; mean BMI(no DM)</li>
+    </ul>
+    <p>
+      Sample means: <strong>27.8</strong> in the no-diabetes group versus <strong>31.9</strong> in the
+      diabetes group. The Welch <em>t</em>-statistic is <strong>99.9</strong>, with a one-tailed
+      <em>p</em>-value indistinguishable from zero (well below any sensible α). We reject H<sub>0</sub>
+      decisively: BMI is materially higher among diabetics.
+    </p>
+    <figure class="figure">
+      <img src="figures/03_bmi_violin.png" alt="Violin plot of BMI distribution by diabetes status">
+      <figcaption>
+        <strong>Figure 3.</strong> BMI distributions for each group. The diabetic distribution is
+        not just shifted up — it is also visibly heavier-tailed at the high end. The black bar marks
+        the median; samples were down-sampled to 8,000 per group for readability.
+      </figcaption>
+    </figure>
+
+    <h3>3.4 Hypothesis test 2 — does prevalence differ by sex?</h3>
+    <p>
+      A two-sided Welch <em>t</em>-test on the diabetes indicator, grouped by sex.
+    </p>
+    <ul class="hypotheses">
+      <li><strong>H<sub>0</sub>:</strong> diabetes prevalence is the same in men and women</li>
+      <li><strong>H<sub>A</sub>:</strong> the prevalences differ</li>
+    </ul>
+    <p>
+      Female prevalence is <strong>13.0%</strong>; male prevalence is <strong>15.2%</strong>.
+      <em>t</em> = 15.7, <em>p</em> ≈ 1.3 × 10<sup>-55</sup>. We reject H<sub>0</sub>: the difference
+      is small in absolute terms (about 2 percentage points) but the sample is so large that the
+      uncertainty bands are tight — this is a real, replicable gap, not noise.
+    </p>
+    <figure class="figure">
+      <img src="figures/04_sex_prevalence.png" alt="Bar chart comparing female and male diabetes prevalence">
+      <figcaption>
+        <strong>Figure 4.</strong> Sex-stratified prevalence. The male rate is roughly 17% higher
+        than the female rate in relative terms, consistent with national CDC estimates.
+      </figcaption>
+    </figure>
+
+    <h3>3.5 Hypothesis test 3 — does BMI vary across age groups?</h3>
+    <p>
+      A one-way ANOVA across our three engineered age buckets.
+    </p>
+    <ul class="hypotheses">
+      <li><strong>H<sub>0</sub>:</strong> mean BMI is the same in all three age groups</li>
+      <li><strong>H<sub>A</sub>:</strong> at least one group's mean differs</li>
+    </ul>
+    <p>
+      The middle-aged cohort (40–64) has the highest mean BMI at <strong>28.9</strong>; both the
+      younger and older cohorts sit near 27.9. <em>F</em> = 762.8, <em>p</em> ≈ 0. We reject
+      H<sub>0</sub> — but the picture is more interesting than a monotone trend would predict.
+      Average BMI rises through middle age and then <em>falls</em> again in the 65+ bucket, a
+      well-documented pattern that combines survivorship bias (heavier adults die younger) with
+      muscle-mass loss in older age.
+    </p>
+    <figure class="figure">
+      <img src="figures/05_age_bmi_violin.png" alt="Violin plot of BMI distribution across three age cohorts">
+      <figcaption>
+        <strong>Figure 5.</strong> BMI by broad age cohort. Note the non-monotone shape — a useful
+        nudge that the age &harr; BMI &harr; diabetes relationship is non-linear, which is one of
+        the reasons we'll bring tree-based models into the next section.
+      </figcaption>
+    </figure>
+  </section>
+
+  <section id="models">
+    <h2 class="section-heading"><span class="section-heading__num">4.</span> Primary analysis: three classifiers</h2>
+    <p>
+      The exploration leaves us with a binary classification problem on a heavily imbalanced
+      target. Three things drive the modeling choices:
+    </p>
+    <ol class="steps">
+      <li>
+        <strong>Imbalance.</strong> 6 negatives for every positive. We have to weight the loss, or
+        the model will learn to predict &ldquo;no diabetes&rdquo; for everyone.
+      </li>
+      <li>
+        <strong>Mixed feature types.</strong> Continuous (BMI), ordinal (Age, GenHlth), and binary
+        (Smoker, HighBP). Tree-based models handle this natively; linear models need scaling.
+      </li>
+      <li>
+        <strong>Non-linearity.</strong> Figure 5 already showed a U-shape in BMI by age. Whatever
+        model we ship had better be able to bend.
+      </li>
+    </ol>
+    <p>
+      We compare three models with progressively more flexibility:
+    </p>
+    <ul class="model-list">
+      <li>
+        <strong>Logistic regression</strong> with <code>class_weight="balanced"</code>. The
+        interpretable baseline. Coefficients on standardized features tell us the direction and
+        strength of each signal.
+      </li>
+      <li>
+        <strong>Random forest</strong> (200 trees, max depth 14, balanced class weights). Captures
+        non-linearities and interactions; gives a feature-importance ranking that doesn't rely on
+        the linearity assumption.
+      </li>
+      <li>
+        <strong>Histogram gradient boosting</strong> (300 iterations, learning rate 0.07). Modern
+        gradient boosting is the off-the-shelf champion on tabular data. We balance the loss with
+        sample weights since <code>HistGradientBoostingClassifier</code> doesn't take
+        <code>class_weight</code> directly.
+      </li>
+    </ul>
+    <p>
+      Eighty-twenty stratified train/test split, fixed seed (42). Linear model trains on
+      standardized features (mean 0, variance 1); the tree models train on the raw values.
+    </p>
+
+    <h3>4.1 ROC and precision-recall</h3>
+    <div class="figure-row">
+      <figure class="figure">
+        <img src="figures/06_roc_curves.png" alt="ROC curves for the three models">
+        <figcaption>
+          <strong>Figure 6.</strong> ROC curves on the held-out test set. All three models are
+          materially better than chance; gradient boosting wins narrowly with AUC = 0.827.
+        </figcaption>
+      </figure>
+      <figure class="figure">
+        <img src="figures/07_pr_curves.png" alt="Precision-recall curves for the three models">
+        <figcaption>
+          <strong>Figure 7.</strong> Precision-recall, the imbalance-honest view. The dashed line
+          at 0.139 is what you'd get by guessing randomly at the base rate. The best model triples
+          that — useful, but not magic.
+        </figcaption>
+      </figure>
+    </div>
+
+    <h3>4.2 Headline metrics</h3>
+    <table class="metrics">
+      <thead>
+        <tr><th>Model</th><th>ROC-AUC</th><th>PR-AUC</th><th>Sens.@0.5</th><th>Spec.@0.5</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Logistic regression</td><td>0.820</td><td>0.393</td><td>—</td><td>—</td></tr>
+        <tr><td>Random forest</td><td>0.825</td><td>0.419</td><td>—</td><td>—</td></tr>
+        <tr class="winner"><td>Gradient boosting</td><td>0.827</td><td>0.422</td><td>0.795</td><td>0.706</td></tr>
+      </tbody>
+    </table>
+    <p class="caption">
+      <em>The three models converge at roughly the same ROC-AUC ceiling — a clue that the survey,
+      not the algorithm, is the binding constraint. Gradient boosting wins by a hair; we use it
+      below for the confusion matrix and calibration.</em>
+    </p>
+
+    <h3>4.3 Confusion at threshold 0.5</h3>
+    <figure class="figure">
+      <img src="figures/08_confusion.png" alt="Confusion matrix at threshold 0.5">
+      <figcaption>
+        <strong>Figure 8.</strong> At a 0.5 cutoff the gradient-boosting model catches
+        <strong>79.5%</strong> of true diabetics (sensitivity) at the cost of flagging
+        <strong>29.4%</strong> of healthy respondents as positive. For a <em>screening</em>
+        workflow — &ldquo;who should go get a blood test?&rdquo; — that trade-off is roughly the
+        right shape: we want high sensitivity even if specificity sags.
+      </figcaption>
+    </figure>
+
+    <h3>4.4 Threshold tuning</h3>
+    <p>
+      The choice of decision threshold is where machine learning meets clinical priorities. A
+      screening tool wants to err toward false positives (you miss fewer diabetics, at the cost of
+      more &ldquo;please come in for a real test&rdquo; nudges); a self-diagnostic widget might
+      prefer the opposite. The sweep below shows the trade-off explicitly.
+    </p>
+    <figure class="figure">
+      <img src="figures/12_threshold.png" alt="Sensitivity, specificity, and precision plotted against decision threshold">
+      <figcaption>
+        <strong>Figure 9.</strong> Sensitivity (recall), specificity, and precision as a function
+        of the gradient-boosting decision threshold. The dashed line marks the default 0.5 cutoff.
+      </figcaption>
+    </figure>
+
+    <h3>4.5 Calibration</h3>
+    <p>
+      A score from a classifier is only as good as its meaning. If the model says &ldquo;this person's
+      diabetes probability is 0.30,&rdquo; we'd like 30 out of every 100 such people to actually have
+      diabetes. The reliability diagram below quantifies that.
+    </p>
+    <figure class="figure">
+      <img src="figures/11_calibration.png" alt="Calibration curve for gradient boosting">
+      <figcaption>
+        <strong>Figure 10.</strong> Calibration curve, ten quantile bins. The model is broadly
+        well-calibrated in the middle of the range and slightly under-confident at the high end —
+        respondents whose predicted probability is around 0.7 actually develop diabetes at a rate
+        closer to 0.55, because we trained on a class-balanced sample.
+      </figcaption>
+    </figure>
+  </section>
+
+  <section id="visualization">
+    <h2 class="section-heading"><span class="section-heading__num">5.</span> What the model learned</h2>
+    <p>
+      Two views of feature importance. The random forest's importances measure how much each
+      feature reduces impurity across the ensemble — non-negative, scale-free, but
+      direction-blind. The standardized logistic-regression coefficients tell us the direction
+      (positive coefficients increase diabetes log-odds) and the relative strength on a common
+      scale.
+    </p>
+    <div class="figure-row">
+      <figure class="figure">
+        <img src="figures/09_feature_importance.png" alt="Random forest feature importance bar chart">
+        <figcaption>
+          <strong>Figure 11.</strong> Random forest impurity-based importance. <code>BMI</code>
+          and self-rated <code>GenHlth</code> dominate, followed by <code>Age</code> and
+          <code>HighBP</code>. The questions a doctor would ask first are the same ones the model
+          finds most useful — reassuring rather than surprising.
+        </figcaption>
+      </figure>
+      <figure class="figure">
+        <img src="figures/10_lr_coefficients.png" alt="Standardized logistic regression coefficients">
+        <figcaption>
+          <strong>Figure 12.</strong> Signed standardized logistic-regression coefficients. Red
+          drives diabetes risk up, blue drives it down. <code>HighBP</code>, <code>GenHlth</code>
+          (poorer self-rating ⇒ higher risk), and <code>HighChol</code> are the strongest positive
+          signals; <code>Income</code> and <code>HvyAlcoholConsump</code> are the most protective —
+          the latter one of the more counter-intuitive findings, almost certainly an artifact of
+          how the survey codes &ldquo;heavy drinking&rdquo; in a population skewed toward
+          older respondents.
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section id="calculator" class="calc-section">
+    <h2 class="section-heading"><span class="section-heading__num">6.</span> Try it yourself</h2>
+    <p>
+      The widget below runs our trained logistic-regression model directly in your browser — no
+      data leaves this page. Move the sliders and toggles to match your own answers, and the
+      model's predicted probability of diabetes updates live.
+    </p>
+    <p class="caveat">
+      <strong>This is a class project, not medical advice.</strong> The model was trained on a 2015
+      survey of US adults, calibration is imperfect at the high end (Figure 10), and a
+      questionnaire cannot replace a blood test. If the gauge sits in the orange or red, that means
+      &ldquo;maybe go ask a real doctor,&rdquo; not &ldquo;you have diabetes.&rdquo;
+    </p>
+    <div class="calc" id="calc">
+      <div class="calc__form">
+        <fieldset>
+          <legend>Demographics</legend>
+          <label class="field">
+            <span>Age</span>
+            <select data-feature="Age">
+              <option value="1">18–24</option>
+              <option value="2">25–29</option>
+              <option value="3">30–34</option>
+              <option value="4">35–39</option>
+              <option value="5">40–44</option>
+              <option value="6">45–49</option>
+              <option value="7" selected>50–54</option>
+              <option value="8">55–59</option>
+              <option value="9">60–64</option>
+              <option value="10">65–69</option>
+              <option value="11">70–74</option>
+              <option value="12">75–79</option>
+              <option value="13">80+</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Sex</span>
+            <select data-feature="Sex">
+              <option value="0">Female</option>
+              <option value="1" selected>Male</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Education</span>
+            <select data-feature="Education">
+              <option value="1">Never attended</option>
+              <option value="2">Elementary</option>
+              <option value="3">Some high school</option>
+              <option value="4">High school graduate</option>
+              <option value="5">Some college</option>
+              <option value="6" selected>College graduate</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Income</span>
+            <select data-feature="Income">
+              <option value="1">&lt; $10,000</option>
+              <option value="2">$10–15,000</option>
+              <option value="3">$15–20,000</option>
+              <option value="4">$20–25,000</option>
+              <option value="5" selected>$25–35,000</option>
+              <option value="6">$35–50,000</option>
+              <option value="7">$50–75,000</option>
+              <option value="8">$75,000+</option>
+            </select>
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Body</legend>
+          <label class="field field--slider">
+            <span>BMI <output data-bmi-out>27</output></span>
+            <input type="range" data-feature="BMI" min="14" max="50" step="1" value="27">
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Medical history</legend>
+          <label class="check"><input type="checkbox" data-feature="HighBP"> High blood pressure</label>
+          <label class="check"><input type="checkbox" data-feature="HighChol"> High cholesterol</label>
+          <label class="check"><input type="checkbox" data-feature="CholCheck" checked> Cholesterol checked in last 5 years</label>
+          <label class="check"><input type="checkbox" data-feature="Stroke"> Ever had a stroke</label>
+          <label class="check"><input type="checkbox" data-feature="HeartDiseaseorAttack"> Heart disease or heart attack</label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Lifestyle</legend>
+          <label class="check"><input type="checkbox" data-feature="Smoker"> Smoked 100+ cigarettes in life</label>
+          <label class="check"><input type="checkbox" data-feature="PhysActivity" checked> Exercised in past 30 days</label>
+          <label class="check"><input type="checkbox" data-feature="Fruits" checked> Eat fruit ≥ 1×/day</label>
+          <label class="check"><input type="checkbox" data-feature="Veggies" checked> Eat vegetables ≥ 1×/day</label>
+          <label class="check"><input type="checkbox" data-feature="HvyAlcoholConsump"> Heavy alcohol consumption</label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Healthcare access</legend>
+          <label class="check"><input type="checkbox" data-feature="AnyHealthcare" checked> Have any health-care coverage</label>
+          <label class="check"><input type="checkbox" data-feature="NoDocbcCost"> Skipped doctor due to cost (last year)</label>
+        </fieldset>
+
+        <fieldset>
+          <legend>How you feel</legend>
+          <label class="field">
+            <span>General health</span>
+            <select data-feature="GenHlth">
+              <option value="1">Excellent</option>
+              <option value="2">Very good</option>
+              <option value="3" selected>Good</option>
+              <option value="4">Fair</option>
+              <option value="5">Poor</option>
+            </select>
+          </label>
+          <label class="field field--slider">
+            <span>Days mental health not good (last 30) <output data-out="MentHlth">2</output></span>
+            <input type="range" data-feature="MentHlth" min="0" max="30" step="1" value="2">
+          </label>
+          <label class="field field--slider">
+            <span>Days physical health not good (last 30) <output data-out="PhysHlth">2</output></span>
+            <input type="range" data-feature="PhysHlth" min="0" max="30" step="1" value="2">
+          </label>
+          <label class="check"><input type="checkbox" data-feature="DiffWalk"> Difficulty walking or climbing stairs</label>
+        </fieldset>
+      </div>
+
+      <aside class="calc__readout">
+        <div class="gauge" aria-hidden="true">
+          <svg viewBox="0 0 200 120" class="gauge__svg">
+            <defs>
+              <linearGradient id="gaugeGrad" x1="0%" x2="100%" y1="0%" y2="0%">
+                <stop offset="0%" stop-color="#0e7c7b"/>
+                <stop offset="50%" stop-color="#b58900"/>
+                <stop offset="100%" stop-color="#9b1c1c"/>
+              </linearGradient>
+            </defs>
+            <path d="M 20 110 A 80 80 0 0 1 180 110" fill="none" stroke="#e9e2d2" stroke-width="14" stroke-linecap="round"/>
+            <path id="gaugeArc" d="M 20 110 A 80 80 0 0 1 180 110" fill="none" stroke="url(#gaugeGrad)" stroke-width="14" stroke-linecap="round" stroke-dasharray="251.3" stroke-dashoffset="251.3"/>
+            <line id="gaugeNeedle" x1="100" y1="110" x2="100" y2="40" stroke="#1a1a1a" stroke-width="2.4" stroke-linecap="round" transform="rotate(-90 100 110)"/>
+            <circle cx="100" cy="110" r="6" fill="#1a1a1a"/>
+          </svg>
+          <div class="gauge__num"><span data-pct>—</span><span class="gauge__pct">%</span></div>
+          <div class="gauge__label" data-band>fill in the form</div>
+        </div>
+        <div class="readout-note">
+          <p>
+            Your predicted probability of having diabetes, given the answers on the left.
+            The base-rate (the prevalence in the BRFSS sample) is <strong>13.9%</strong>; anything
+            below that is &ldquo;below-average risk.&rdquo;
+          </p>
+          <ul class="legend-list">
+            <li><span class="dot" style="background:#0e7c7b"></span> &lt; 15% &nbsp; below average</li>
+            <li><span class="dot" style="background:#b58900"></span> 15–40% &nbsp; elevated</li>
+            <li><span class="dot" style="background:#9b1c1c"></span> &gt; 40% &nbsp; high — consider screening</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section id="conclusions">
+    <h2 class="section-heading"><span class="section-heading__num">7.</span> Insights and conclusions</h2>
+    <p>
+      Three things are worth taking away from this exercise.
+    </p>
+    <h3>The questionnaire works — for triage.</h3>
+    <p>
+      A 90-second self-report can hit ROC-AUC = 0.83 and catch four out of five diabetics at a
+      threshold tuned for sensitivity. That is not good enough to <em>diagnose</em> anyone — false
+      positives outnumber true positives at almost every operating point — but it is plenty good
+      enough to triage: to flag the people who should go get a real blood test, ahead of the
+      people who probably don't need one. For a public-health screening program looking to spend
+      its outreach budget where it will move the needle most, that is a real and useful signal.
+    </p>
+    <h3>The signal is in the survey, not the algorithm.</h3>
+    <p>
+      All three models — a linear baseline, a random forest, and a gradient-boosted ensemble —
+      converged within 0.01 of each other on ROC-AUC. That is the signature of a feature ceiling.
+      Adding more sophisticated learners is not what would unlock the next gains; adding better
+      questions is. The most informative existing features are the ones a primary-care doctor would
+      ask first: BMI, self-rated health, age, blood pressure, cholesterol. The features the doctor
+      would not bother asking — fruit consumption, daily veggie intake, sex — pulled almost no weight.
+    </p>
+    <h3>Be honest about what you can't see.</h3>
+    <p>
+      The data are self-reported, cross-sectional, and from 2015. We learn what BRFSS respondents
+      say about themselves on a phone call, not what shows up on a glucose tolerance test. Heavy
+      alcohol consumption pulled a <em>protective</em> coefficient — not because drinking prevents
+      diabetes, but because it correlates with younger and healthier respondents in this sample.
+      A more careful study would disentangle that with stratification or causal modeling. We
+      flag it here as a caution against reading the coefficients as policy.
+    </p>
+    <p>
+      The reader who came in cold should leave with an intuition for the data-science pipeline —
+      hypothesis tests, model comparison, threshold trade-offs, calibration — and a working sense
+      of what a 13.9%-prevalence binary classifier can and cannot tell them. The reader who came in
+      knowing the BRFSS dataset should leave with one new specific number: 0.827 ROC-AUC is
+      attainable from the questionnaire alone, and the binding constraint isn't the model.
+    </p>
+  </section>
+
+  <section id="citations">
+    <h2 class="section-heading"><span class="section-heading__num">8.</span> Citations and further reading</h2>
+    <ul class="cites">
+      <li>
+        Centers for Disease Control and Prevention.
+        <em>Behavioral Risk Factor Surveillance System (BRFSS) 2015 Codebook.</em>
+        <a href="https://www.cdc.gov/brfss/annual_data/annual_2015.html" target="_blank" rel="noopener">
+          cdc.gov/brfss/annual_data/annual_2015.html</a>.
+      </li>
+      <li>
+        Teboul, A. <em>Diabetes Health Indicators Dataset.</em> Kaggle, 2021.
+        <a href="https://www.kaggle.com/datasets/alexteboul/diabetes-health-indicators-dataset" target="_blank" rel="noopener">
+          kaggle.com/.../diabetes-health-indicators-dataset</a>.
+      </li>
+      <li>
+        Pedregosa, F. et al. <em>Scikit-learn: Machine Learning in Python.</em>
+        <em>JMLR</em> 12, 2825–2830 (2011).
+        <a href="https://jmlr.org/papers/v12/pedregosa11a.html" target="_blank" rel="noopener">
+          jmlr.org/papers/v12/pedregosa11a.html</a>.
+      </li>
+      <li>
+        Niculescu-Mizil, A. &amp; Caruana, R.
+        <em>Predicting Good Probabilities with Supervised Learning.</em>
+        <a href="https://www.cs.cornell.edu/~alexn/papers/calibration.icml05.crc.rev3.pdf" target="_blank" rel="noopener">PDF</a>
+        — background reading on the calibration plot in §4.5.
+      </li>
+      <li>
+        Hosmer, D. W. &amp; Lemeshow, S. <em>Applied Logistic Regression</em> (2nd ed.). Wiley,
+        2000. The textbook reference for the §4 baseline.
+      </li>
+      <li>
+        Chen, T. &amp; Guestrin, C. <em>XGBoost: A Scalable Tree Boosting System.</em>
+        <em>KDD</em> 2016. The intuition behind the gradient-boosting model used in §4.
+      </li>
+      <li>
+        American Diabetes Association.
+        <em>Standards of Medical Care in Diabetes — 2024.</em>
+        <a href="https://diabetesjournals.org/care/issue/47/Supplement_1" target="_blank" rel="noopener">
+          diabetesjournals.org</a>.
+        Background on real-world screening criteria the model is approximating.
+      </li>
+    </ul>
+    <p class="reproduce">
+      <strong>Reproduce this analysis:</strong>
+      clone <a href="https://github.com/amath18/cmsc320finalproject" target="_blank" rel="noopener">the repo</a>,
+      download the
+      <a href="https://www.kaggle.com/datasets/alexteboul/diabetes-health-indicators-dataset" target="_blank" rel="noopener">CSV</a>
+      into the project root, and run <code>python3 analysis.py</code>. The notebook
+      (<a href="notebook.html">rendered HTML</a>,
+      <a href="https://github.com/amath18/cmsc320finalproject/blob/main/final_tutorial.ipynb" target="_blank" rel="noopener">raw .ipynb</a>,
+      <a href="https://colab.research.google.com/github/amath18/cmsc320finalproject/blob/main/final_tutorial.ipynb" target="_blank" rel="noopener">Colab</a>)
+      walks through the same code cell-by-cell.
+    </p>
+  </section>
+</article>
+
+</main>
+
+<footer class="foot">
+  <div class="foot__inner">
+    <p class="foot__title">Predicting Diabetes from Survey Data Alone</p>
+    <p class="foot__meta">
+      CMSC 320 — Spring 2026 — Dr. Fardina Alam — University of Maryland<br>
+      Pranav Bykampadi · Ansh Mathur · Alvin · Addhyan Kumar
+    </p>
+    <p class="foot__links">
+      <a href="https://github.com/amath18/cmsc320finalproject" target="_blank" rel="noopener">GitHub</a>
+      <span>·</span>
+      <a href="notebook.html">Notebook (HTML)</a>
+      <span>·</span>
+      <a href="https://github.com/amath18/cmsc320finalproject/blob/main/final_tutorial.ipynb" target="_blank" rel="noopener">.ipynb</a>
+    </p>
+  </div>
+</footer>
+
+<script src="script.js" defer></script>
+</body>
+</html>

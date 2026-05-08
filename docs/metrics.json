@@ -1,0 +1,64 @@
+{
+  "dataset": {
+    "rows": 253680,
+    "columns": 22,
+    "features_used": 21,
+    "positives": 35346,
+    "negatives": 218334,
+    "prevalence": 0.13933301797540207
+  },
+  "hypothesis_tests": {
+    "bmi_by_diabetes": {
+      "test": "Welch's one-tailed t-test",
+      "mean_no_dm": 27.80577005871738,
+      "mean_dm": 31.94401063769592,
+      "t": 99.91962872964875,
+      "p_one_tailed": 0.0
+    },
+    "prevalence_by_sex": {
+      "test": "Welch's two-tailed t-test on indicator",
+      "rate_female": 0.12967867355994758,
+      "rate_male": 0.1516033158469554,
+      "t": 15.715163471328745,
+      "p": 1.2721936493685938e-55
+    },
+    "bmi_by_age_group": {
+      "test": "one-way ANOVA",
+      "means": [
+        27.975996234703484,
+        28.893112071284996,
+        27.832233075109464
+      ],
+      "F": 762.8424736558701,
+      "p": 0.0
+    }
+  },
+  "models": {
+    "logistic_regression": {
+      "roc_auc": 0.8196313622060201,
+      "pr_auc": 0.3925851736184654
+    },
+    "random_forest": {
+      "roc_auc": 0.8245628868384085,
+      "pr_auc": 0.4189814243981105
+    },
+    "gradient_boosting": {
+      "roc_auc": 0.8270176605004304,
+      "pr_auc": 0.4225358983316465,
+      "accuracy_at_0.5": 0.7187204351939451,
+      "f1_at_0.5": 0.4405942534592921,
+      "sensitivity_at_0.5": 0.795020512095063,
+      "specificity_at_0.5": 0.7063686536743994
+    }
+  },
+  "top_correlates": {
+    "GenHlth": 0.29356906307871694,
+    "HighBP": 0.26312878992336486,
+    "DiffWalk": 0.21834435192101748,
+    "BMI": 0.2168430602031178,
+    "HighChol": 0.2002761918791174,
+    "Age": 0.17744187216726118,
+    "HeartDiseaseorAttack": 0.17728225780720458,
+    "PhysHlth": 0.17133670038725582
+  }
+}
