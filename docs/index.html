@@ -124,29 +124,28 @@
     <h2 class="section-heading"><span class="section-heading__num">1.</span> Introduction</h2>
     <p class="lede">
       Roughly <strong>one in ten Americans</strong> has diabetes, and another one in three is
-      pre-diabetic. Most don't know it. The classical screen — a fasting blood-glucose or
-      <abbr title="Glycated hemoglobin, a marker of long-term blood sugar">HbA1c</abbr> draw —
+      pre-diabetic. Most don't know it. The standard screen, a fasting blood-glucose or
+      <abbr title="Glycated hemoglobin, a marker of long-term blood sugar">HbA1c</abbr> draw
       is cheap by hospital standards but still requires a clinic, a phlebotomist, and a follow-up
       appointment that an uninsured patient may never make.
     </p>
     <p>
       The federal Behavioral Risk Factor Surveillance System (BRFSS) takes the opposite approach.
-      Every year the CDC calls 400,000+ adults and asks the same 22 questions: how tall are you, do
-      you smoke, did you eat fruit yesterday, can you walk a flight of stairs without help. The data
-      are free, the questions take ninety seconds, and they cost nothing to administer. The natural
-      question is whether the answers carry enough signal to flag someone at elevated risk before
-      they ever set foot in a clinic.
+      Every year the CDC calls 400,000+ adults and asks the same 22 questions: "How tall are you?",
+      "Do you smoke"?, "Did you eat fruit yesterday?", "Can you walk a flight of stairs without help?".
+      The data is free, the questions take no more than ninety seconds, and they cost nothing to
+      administer. You might wonder, do the patients answers hold enough weight to warrant a clinical visit?
     </p>
     <blockquote class="pullquote">
       Can we predict diabetes risk from cheap survey data alone, well enough to triage who should
       go get a real blood test?
     </blockquote>
     <p>
-      That is the question this tutorial tries to answer. Along the way it walks through the full
-      data-science pipeline expected by CMSC 320: acquiring and curating the survey, exploring it
-      with summary statistics and three formal hypothesis tests, training and comparing three
-      classification algorithms, and converting the best one into an in-browser tool you can run on
-      your own answers at the bottom of the page.
+      In this article, we will answer this question by following a data science pipeline: we will
+      first aquire the survey, analyze it using summary statistics and three formal hypothesis
+      tests, train three different classification algorithms and compare them, and lastly, we will
+      use the best algorithm to create an in-browser calculator that you can use at the bottom of
+      the article to test to see how at-risk you are for having diabetes.
     </p>
   </section>
 
@@ -165,17 +164,17 @@
       continuous feature, BMI.
     </p>
     <p>
-      Preprocessing was deliberately light, because the file is already harmonized:
+      Data pre-processing was simple since the file was already nicely cleaned and structured:
     </p>
     <ol class="steps">
       <li>Strip stray whitespace from column names.</li>
       <li>Force every column through <code>pd.to_numeric(errors="coerce")</code>; drop the (zero) rows that fail.</li>
-      <li>Cast every column to <code>int</code> — every variable is coded numerically by design.</li>
-      <li>Engineer one helper column, <code>AgeGroup</code>, that buckets the 13-level <code>Age</code> ordinal into Young / Middle / Older for the ANOVA below.</li>
+      <li>Cast every column to <code>int</code>, every variable is coded numerically by design.</li>
+      <li>Build a helper column, <code>AgeGroup</code>, that buckets the 13-level <code>Age</code> ordinal into Young / Middle / Older for the ANOVA below.</li>
     </ol>
     <p>
       After cleaning, the working frame is <strong>253,680 rows × 22 columns</strong>: zero missing
-      values, fully numeric, ready for analysis.
+      values, fully numeric, and ready for analysis.
     </p>
 
     <details class="codeblock">
@@ -205,7 +204,7 @@ df.shape  # (253680, 22) before AgeGroup, (253680, 23) after</code></pre>
   <section id="exploration">
     <h2 class="section-heading"><span class="section-heading__num">3.</span> Exploratory analysis</h2>
     <p>
-      Before fitting any model we want a feel for the data: how lopsided is the target, which features
+      Before fitting any model, we want a feel for the data: how lopsided is the target, which features
       seem to move with diabetes, and are the differences we see big enough to be real or could they
       be noise? Three formal hypothesis tests answer the third question.
     </p>
@@ -223,8 +222,8 @@ df.shape  # (253680, 22) before AgeGroup, (253680, 23) after</code></pre>
     <h3>3.2 Which features even matter?</h3>
     <p>
       A quick Pearson correlation against the target gives a first-pass ranking. None of the
-      individual correlations are large in absolute terms — that's expected for a 21-feature health
-      survey, where most signal lives in interactions — but the directions are sensible: high blood
+      individual correlations are large in absolute terms, which is expected for a 21-feature health
+      survey, where most signal lives in interactions, but the directions are simple: high blood
       pressure, high cholesterol, BMI, age, and self-rated general health are the most strongly
       associated with diabetes; physical activity, education, and income point the other way.
     </p>
@@ -237,7 +236,7 @@ df.shape  # (253680, 22) before AgeGroup, (253680, 23) after</code></pre>
       </figcaption>
     </figure>
 
-    <h3>3.3 Hypothesis test 1 — does BMI separate the groups?</h3>
+    <h3>3.3 Hypothesis test 1: does BMI separate the groups?</h3>
     <p>
       We test whether the <em>mean</em> BMI among diabetics is higher than among non-diabetics. The
       classical tool here is Welch's <em>t</em>-test, which doesn't require equal variances, run as a
@@ -251,19 +250,19 @@ df.shape  # (253680, 22) before AgeGroup, (253680, 23) after</code></pre>
     <p>
       Sample means: <strong>27.8</strong> in the no-diabetes group versus <strong>31.9</strong> in the
       diabetes group. The Welch <em>t</em>-statistic is <strong>99.9</strong>, with a one-tailed
-      <em>p</em>-value indistinguishable from zero (well below any sensible α). We reject H<sub>0</sub>
-      decisively: BMI is materially higher among diabetics.
+      <em>p</em>-value indistinguishable from zero (well below any sensible α). We can definitively reject
+      H<sub>0</sub>: BMI is materially higher among diabetics.
     </p>
     <figure class="figure">
       <img src="figures/03_bmi_violin.png" alt="Violin plot of BMI distribution by diabetes status">
       <figcaption>
         <strong>Figure 3.</strong> BMI distributions for each group. The diabetic distribution is
-        not just shifted up — it is also visibly heavier-tailed at the high end. The black bar marks
+        not just shifted up, it is also visibly heavier-tailed at the high end. The black bar marks
         the median; samples were down-sampled to 8,000 per group for readability.
       </figcaption>
     </figure>
 
-    <h3>3.4 Hypothesis test 2 — does prevalence differ by sex?</h3>
+    <h3>3.4 Hypothesis test 2: does prevalence differ by sex?</h3>
     <p>
       A two-sided Welch <em>t</em>-test on the diabetes indicator, grouped by sex.
     </p>
@@ -274,8 +273,8 @@ df.shape  # (253680, 22) before AgeGroup, (253680, 23) after</code></pre>
     <p>
       Female prevalence is <strong>13.0%</strong>; male prevalence is <strong>15.2%</strong>.
       <em>t</em> = 15.7, <em>p</em> ≈ 1.3 × 10<sup>-55</sup>. We reject H<sub>0</sub>: the difference
-      is small in absolute terms (about 2 percentage points) but the sample is so large that the
-      uncertainty bands are tight — this is a real, replicable gap, not noise.
+      may appear small (about 2 percentage points) but the sample is so large that the
+      uncertainty bands are tight. This is a statistically meaningful gap.
     </p>
     <figure class="figure">
       <img src="figures/04_sex_prevalence.png" alt="Bar chart comparing female and male diabetes prevalence">
@@ -285,18 +284,18 @@ df.shape  # (253680, 22) before AgeGroup, (253680, 23) after</code></pre>
       </figcaption>
     </figure>
 
-    <h3>3.5 Hypothesis test 3 — does BMI vary across age groups?</h3>
+    <h3>3.5 Hypothesis test 3: does BMI vary across age groups?</h3>
     <p>
-      A one-way ANOVA across our three engineered age buckets.
+      A one-way ANOVA across our three different age buckets.
     </p>
     <ul class="hypotheses">
       <li><strong>H<sub>0</sub>:</strong> mean BMI is the same in all three age groups</li>
       <li><strong>H<sub>A</sub>:</strong> at least one group's mean differs</li>
     </ul>
     <p>
-      The middle-aged cohort (40–64) has the highest mean BMI at <strong>28.9</strong>; both the
-      younger and older cohorts sit near 27.9. <em>F</em> = 762.8, <em>p</em> ≈ 0. We reject
-      H<sub>0</sub> — but the picture is more interesting than a monotone trend would predict.
+      The middle-aged group (40–64) has the highest mean BMI at <strong>28.9</strong>; both the
+      younger and older groups sit near 27.9. <em>F</em> = 762.8, <em>p</em> ≈ 0. We reject
+      H<sub>0</sub>, however the picture is more interesting than a monotone trend would predict.
       Average BMI rises through middle age and then <em>falls</em> again in the 65+ bucket, a
       well-documented pattern that combines survivorship bias (heavier adults die younger) with
       muscle-mass loss in older age.
@@ -304,8 +303,8 @@ df.shape  # (253680, 22) before AgeGroup, (253680, 23) after</code></pre>
     <figure class="figure">
       <img src="figures/05_age_bmi_violin.png" alt="Violin plot of BMI distribution across three age cohorts">
       <figcaption>
-        <strong>Figure 5.</strong> BMI by broad age cohort. Note the non-monotone shape — a useful
-        nudge that the age &harr; BMI &harr; diabetes relationship is non-linear, which is one of
+        <strong>Figure 5.</strong> BMI by broad age cohort. Note the non-monotone shape, which a useful
+        indicator that the age &harr; BMI &harr; diabetes relationship is non-linear, which is one of
         the reasons we'll bring tree-based models into the next section.
       </figcaption>
     </figure>
@@ -400,7 +399,7 @@ df.shape  # (253680, 22) before AgeGroup, (253680, 23) after</code></pre>
         <strong>Figure 8.</strong> At a 0.5 cutoff the gradient-boosting model catches
         <strong>79.5%</strong> of true diabetics (sensitivity) at the cost of flagging
         <strong>29.4%</strong> of healthy respondents as positive. For a <em>screening</em>
-        workflow — &ldquo;who should go get a blood test?&rdquo; — that trade-off is roughly the
+        workflow asking &ldquo;who should go get a blood test?&rdquo;, that trade-off is roughly the
         right shape: we want high sensitivity even if specificity sags.
       </figcaption>
     </figure>
@@ -430,7 +429,7 @@ df.shape  # (253680, 22) before AgeGroup, (253680, 23) after</code></pre>
       <img src="figures/11_calibration.png" alt="Calibration curve for gradient boosting">
       <figcaption>
         <strong>Figure 10.</strong> Calibration curve, ten quantile bins. The model is broadly
-        well-calibrated in the middle of the range and slightly under-confident at the high end —
+        well-calibrated in the middle of the range and slightly under-confident at the high end,
         respondents whose predicted probability is around 0.7 actually develop diabetes at a rate
         closer to 0.55, because we trained on a class-balanced sample.
       </figcaption>
@@ -441,7 +440,7 @@ df.shape  # (253680, 22) before AgeGroup, (253680, 23) after</code></pre>
     <h2 class="section-heading"><span class="section-heading__num">5.</span> What the model learned</h2>
     <p>
       Two views of feature importance. The random forest's importances measure how much each
-      feature reduces impurity across the ensemble — non-negative, scale-free, but
+      feature reduces impurity across the ensemble; non-negative, scale-free, but
       direction-blind. The standardized logistic-regression coefficients tell us the direction
       (positive coefficients increase diabetes log-odds) and the relative strength on a common
       scale.
@@ -453,7 +452,7 @@ df.shape  # (253680, 22) before AgeGroup, (253680, 23) after</code></pre>
           <strong>Figure 11.</strong> Random forest impurity-based importance. <code>BMI</code>
           and self-rated <code>GenHlth</code> dominate, followed by <code>Age</code> and
           <code>HighBP</code>. The questions a doctor would ask first are the same ones the model
-          finds most useful — reassuring rather than surprising.
+          finds most useful.
         </figcaption>
       </figure>
       <figure class="figure">
@@ -462,10 +461,9 @@ df.shape  # (253680, 22) before AgeGroup, (253680, 23) after</code></pre>
           <strong>Figure 12.</strong> Signed standardized logistic-regression coefficients. Red
           drives diabetes risk up, blue drives it down. <code>HighBP</code>, <code>GenHlth</code>
           (poorer self-rating ⇒ higher risk), and <code>HighChol</code> are the strongest positive
-          signals; <code>Income</code> and <code>HvyAlcoholConsump</code> are the most protective —
-          the latter one of the more counter-intuitive findings, almost certainly an artifact of
-          how the survey codes &ldquo;heavy drinking&rdquo; in a population skewed toward
-          older respondents.
+          signals; <code>Income</code> and <code>HvyAlcoholConsump</code> are the most protective.
+          The latter one of the more counter-intuitive findings, almost certainly caused by how the
+          survey codes &ldquo;heavy drinking&rdquo; in a population skewed toward older respondents.
         </figcaption>
       </figure>
     </div>
@@ -474,7 +472,7 @@ df.shape  # (253680, 22) before AgeGroup, (253680, 23) after</code></pre>
   <section id="calculator" class="calc-section">
     <h2 class="section-heading"><span class="section-heading__num">6.</span> Try it yourself</h2>
     <p>
-      The widget below runs our trained logistic-regression model directly in your browser — no
+      The widget below runs our trained logistic-regression model directly in your browser. No
       data leaves this page. Move the sliders and toggles to match your own answers, and the
       model's predicted probability of diabetes updates live.
     </p>
@@ -634,39 +632,39 @@ df.shape  # (253680, 22) before AgeGroup, (253680, 23) after</code></pre>
     <p>
       Three things are worth taking away from this exercise.
     </p>
-    <h3>The questionnaire works — for triage.</h3>
+    <h3>The questionnaire works for triage.</h3>
     <p>
       A 90-second self-report can hit ROC-AUC = 0.83 and catch four out of five diabetics at a
-      threshold tuned for sensitivity. That is not good enough to <em>diagnose</em> anyone — false
-      positives outnumber true positives at almost every operating point — but it is plenty good
-      enough to triage: to flag the people who should go get a real blood test, ahead of the
-      people who probably don't need one. For a public-health screening program looking to spend
-      its outreach budget where it will move the needle most, that is a real and useful signal.
+      threshold tuned for sensitivity. That is not good enough to diagnose anyone, as false
+      positives are much more frequent than true positives at almost every operating point, but
+      it is plenty good enough to triage. To flag the people who should go get a real blood test,
+      ahead of the people who probably don't need one. For a public-health screening program
+      looking to spend its outreach budget where it will make the biggest impact, it is a strong signal.
     </p>
     <h3>The signal is in the survey, not the algorithm.</h3>
     <p>
-      All three models — a linear baseline, a random forest, and a gradient-boosted ensemble —
-      converged within 0.01 of each other on ROC-AUC. That is the signature of a feature ceiling.
-      Adding more sophisticated learners is not what would unlock the next gains; adding better
+      All three models; a linear baseline, a random forest, and a gradient-boosted ensemble
+      converged within 0.01 of each other on ROC-AUC. That is a sign of a feature ceiling.
+      Adding more sophisticated learners is not what would improve the algorithms. Instead, adding better
       questions is. The most informative existing features are the ones a primary-care doctor would
       ask first: BMI, self-rated health, age, blood pressure, cholesterol. The features the doctor
-      would not bother asking — fruit consumption, daily veggie intake, sex — pulled almost no weight.
+      would not bother asking, such as fruit consumption, daily veggie intake, and sex had little
+      impact.
     </p>
-    <h3>Be honest about what you can't see.</h3>
+    <h3>Certain survey factors may skew how data appears</h3>
     <p>
       The data are self-reported, cross-sectional, and from 2015. We learn what BRFSS respondents
       say about themselves on a phone call, not what shows up on a glucose tolerance test. Heavy
-      alcohol consumption pulled a <em>protective</em> coefficient — not because drinking prevents
+      alcohol consumption pulled a <em>protective</em> coefficient, and not because drinking prevents
       diabetes, but because it correlates with younger and healthier respondents in this sample.
-      A more careful study would disentangle that with stratification or causal modeling. We
-      flag it here as a caution against reading the coefficients as policy.
+      A more careful study would erase that using stratification or causal modeling.
     </p>
     <p>
-      The reader who came in cold should leave with an intuition for the data-science pipeline —
-      hypothesis tests, model comparison, threshold trade-offs, calibration — and a working sense
-      of what a 13.9%-prevalence binary classifier can and cannot tell them. The reader who came in
-      knowing the BRFSS dataset should leave with one new specific number: 0.827 ROC-AUC is
-      attainable from the questionnaire alone, and the binding constraint isn't the model.
+      The reader who came in with no prior background knowledge should leave with an understanding 
+      for the data-science pipeline: hypothesis tests, model comparison, threshold trade-offs, calibration,
+      and an idea of what a 13.9%-prevalence binary classifier can and cannot tell them. The reader who came
+      in knowing the BRFSS dataset should leave with one new specific number: 0.827 ROC-AUC is attainable
+      from the questionnaire alone, and the binding constraint isn't the model.
     </p>
   </section>
 
