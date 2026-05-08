@@ -1,7 +1,7 @@
 # Predicting Diabetes from Survey Data Alone
 
 CMSC 320 — Spring 2026 final project.
-Pranav Bykampadi · Ansh Mathur · Alvin · Addhyan Kumar.
+Pranav Bykampadi · Ansh Mathur · Alvin Persaud · Adhyyan Kumar.
 
 We took the 2015 BRFSS health survey — 253,680 people answering the same
 22 questions the CDC has been asking for decades — and asked whether a

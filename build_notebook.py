@@ -28,7 +28,7 @@ cells.append(md("""\
 **CMSC 320 Spring 2026 — Final Project Tutorial**
 University of Maryland — Dr. Fardina Alam
 
-**Authors:** Pranav Bykampadi · Ansh Mathur · Alvin · Addhyan Kumar
+**Authors:** Pranav Bykampadi · Ansh Mathur · Alvin Persaud · Adhyyan Kumar
 
 ---
 
@@ -39,13 +39,10 @@ C: Data Exploration & Statistics, D: ML Algorithm Design, E: ML Training &
 Evaluation, F: Visualization & Conclusion, G: Final Tutorial Report Creation,
 H: Additional) they led:
 
-- **Pranav Bykampadi** — *TBD*
-- **Ansh Mathur** — *TBD*
-- **Alvin** — *TBD*
-- **Addhyan Kumar** — *TBD*
-
-> *Section letters and short narrative descriptions to be filled in by the
-> team before Gradescope submission.*
+- **Pranav Bykampadi** — D: ML algorithm design; E: ML training & evaluation.
+- **Ansh Mathur** — C: exploration & statistics; F: visualization & results.
+- **Alvin Persaud** — G: tutorial writing.
+- **Adhyyan Kumar** — A: project idea; B: dataset curation.
 
 A polished GitHub-Pages version of this tutorial lives at
 **[amath18.github.io/cmsc320finalproject](https://amath18.github.io/cmsc320finalproject/)**;
